@@ -10,7 +10,7 @@ Hackazon is an **intentionally vulnerable** e-commerce web application originall
 
 | Layer | Technology |
 |---|---|
-| Language | PHP 8.2+ |
+| Language | PHP 8.4+ |
 | Framework | Laravel 13 |
 | Database | MySQL 8 (same schema as original) |
 | Frontend | jQuery + Knockout.js + Bootstrap (unchanged) |
@@ -75,7 +75,7 @@ make down      # stop containers (data preserved)
 
 ### Requirements
 
-- PHP 8.2+
+- PHP 8.4+
 - MySQL 8
 - Composer
 
