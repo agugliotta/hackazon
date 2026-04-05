@@ -13,8 +13,10 @@ function orderStatusLabel($status) {
 }
 @endphp
 
+@php $isPaginator = $myOrders instanceof \Illuminate\Pagination\LengthAwarePaginator; @endphp
+
 @if(count($myOrders) == 0)
-    @if($pager->total() == 0)
+    @if(!$isPaginator || $myOrders->total() == 0)
         <h2>You don't have any orders.</h2>
     @else
         <h2>Incorrect page.</h2>
@@ -48,6 +50,8 @@ function orderStatusLabel($status) {
         </table>
         @endif
 
-        {!! $pager->links() !!}
+        @if($isPaginator)
+            {!! $myOrders->links() !!}
+        @endif
     </div>
 </div>

@@ -119,7 +119,7 @@ Route::get('/wishlist',                                 [WishlistController::cla
 
 Route::get('/cart',                                    [CartController::class, 'index']);
 Route::post('/cart/add',                               [CartController::class, 'add']);
-Route::get('/cart/view',                               [CartController::class, 'view']);
+Route::get('/cart/view',                               [CartController::class, 'show']);
 Route::post('/cart/update',                            [CartController::class, 'update']);
 Route::post('/cart/empty',                             [CartController::class, 'empty']);
 Route::match(['GET', 'POST'], '/cart/set-methods',     [CartController::class, 'setMethods']);
@@ -140,8 +140,11 @@ Route::get('/checkout/order',                             [CheckoutController::c
 // PRODUCT & CATEGORY
 // ═══════════════════════════════════════════════════════════════════════════════
 
-Route::get('/product/{id}',  [ProductController::class, 'show']);
-Route::get('/category/{id}', [CategoryController::class, 'show']);
+// Legacy PHPixie URL format: /product/view?id=X and /category/view?id=X  (must be before wildcard)
+Route::get('/product/view',  [ProductController::class, 'show']);
+Route::get('/category/view', [CategoryController::class, 'show']);
+Route::get('/product/{id}',  [ProductController::class, 'show'])->where('id', '[0-9]+');
+Route::get('/category/{id}', [CategoryController::class, 'show'])->where('id', '[0-9]+');
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // SEARCH
@@ -156,6 +159,7 @@ Route::get('/search', [SearchController::class, 'index']);
 Route::post('/review/send', [ReviewController::class, 'send']);
 Route::match(['GET', 'POST'], '/contact', [ContactController::class, 'index']);
 Route::get('/faq',           [FaqController::class,       'index']);
+Route::post('/faq',          [FaqController::class,       'index']);
 Route::get('/blog',          [BlogController::class,      'index']);
 Route::get('/blog/post',     [BlogController::class,      'post']);
 Route::any('/bestprice',     [BestpriceController::class, 'index']);

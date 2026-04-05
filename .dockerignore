@@ -1,0 +1,35 @@
+.git
+.env
+.env.*
+!.env.example
+node_modules
+/public/build
+/public/hot
+
+# Exclude all of vendor — Dockerfile rebuilds it via composer install.
+# The two custom non-Packagist dirs are exceptions (not on Packagist).
+/vendor
+!/vendor/hackazon
+!/vendor/gwtphp
+/storage/logs/*
+/storage/framework/cache/data/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+
+# Include product images even though .gitignore excludes them
+!/public/products_pictures/*.jpg
+!/public/products_pictures/*.png
+!/public/products_pictures/*.gif
+
+# Never copy cached Laravel bootstrap files — they're generated at runtime
+bootstrap/cache/packages.php
+bootstrap/cache/services.php
+bootstrap/cache/config.php
+bootstrap/cache/routes*.php
+
+# Dev tools
+.phpunit.cache
+.phpunit.result.cache
+_ide_helper.php
+Thumbs.db
+.DS_Store

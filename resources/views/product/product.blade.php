@@ -72,7 +72,7 @@
                             @if(count($options) > 0)
                             <div class="option-variants">
                                 @foreach($options as $variant)
-                                    <strong>{{ $variant->parentOption->name }}:</strong> <span>{{ $variant->name }}</span><br>
+                                    <strong>{{ $variant->parentOption?->name }}:</strong> <span>{{ $variant->name }}</span><br>
                                 @endforeach
                             </div>
                             @endif

@@ -1,6 +1,7 @@
 <ul class="thumbnails product-list-inline-small">
     @foreach($special_offers as $so)
-        @php $offer = $so->product_offers; @endphp
+        @php $offer = $so->product; @endphp
+        @if($offer)
         <li class="col-xs-3">
             <div class="thumbnail">
                 <div class="special-offer-big-img">
@@ -12,5 +13,6 @@
                 </div>
             </div>
         </li>
+        @endif
     @endforeach
 </ul>

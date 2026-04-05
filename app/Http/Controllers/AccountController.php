@@ -48,8 +48,7 @@ class AccountController extends PageController
         $myOrders = [];
 
         if (!$this->useRest) {
-            $myOrders = Order::orderBy('created_at', 'DESC')
-                ->getMyOrdersPager(1, 5);
+            $myOrders = (new Order)->getMyOrdersPager(1, 5);
         }
 
         $service  = $this->vulnService;

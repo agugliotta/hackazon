@@ -120,10 +120,16 @@ All vulnerabilities are preserved from the original application and controlled v
 
 ---
 
+## Demo Credentials
+
+| Role | Username | Password |
+|---|---|---|
+| Admin | `admin` | `123456` |
+| User | `test_user` | `123456` |
+
 ## Admin Interface
 
 - URL: **http://localhost:8080/admin**
-- Default credentials: see `database/hackazon_demo_data.sql`
 - Enable/disable specific vulnerabilities: `/admin/vulnerability/context`
 
 ---

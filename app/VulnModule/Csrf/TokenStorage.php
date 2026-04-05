@@ -10,7 +10,7 @@
 namespace VulnModule\Csrf;
 
 
-use App\Exception\HttpException;
+use App\Exception\HttpException; // kept for getToken() exception
 
 /**
  * Class TokenStorage
@@ -50,77 +50,35 @@ class TokenStorage
      * @return string
      * @throws \App\Exception\HttpException
      */
+    private function key($tokenId): string
+    {
+        return $this->namespace . '.' . $tokenId;
+    }
+
     public function getToken($tokenId)
     {
-        if (!$this->sessionStarted) {
-            $this->startSession();
-        }
-
-        if (!isset($_SESSION[$this->namespace][$tokenId])) {
+        $value = session($this->key($tokenId));
+        if ($value === null) {
             throw new HttpException('The CSRF token with ID '.$tokenId.' does not exist.', 400, null, 'Bad request');
         }
-
-        return (string) $_SESSION[$this->namespace][$tokenId];
+        return (string) $value;
     }
 
-    /**
-     * @param $tokenId
-     * @param $token
-     */
     public function setToken($tokenId, $token)
     {
-        if (!$this->sessionStarted) {
-            $this->startSession();
-        }
-
-        $_SESSION[$this->namespace][$tokenId] = (string) $token;
+        session([$this->key($tokenId) => (string) $token]);
     }
 
-    /**
-     * @param $tokenId
-     * @return bool
-     */
     public function hasToken($tokenId)
     {
-        if (!$this->sessionStarted) {
-            $this->startSession();
-        }
-
-        return isset($_SESSION[$this->namespace][$tokenId]);
+        return session()->has($this->key($tokenId));
     }
 
-    /**
-     * @param $tokenId
-     * @return null|string
-     */
     public function removeToken($tokenId)
     {
-        if (!$this->sessionStarted) {
-            $this->startSession();
-        }
-
-        $token = isset($_SESSION[$this->namespace][$tokenId])
-            ? (string) $_SESSION[$this->namespace][$tokenId]
-            : null;
-
-        unset($_SESSION[$this->namespace][$tokenId]);
-
-        return $token;
-    }
-
-    /**
-     * PHP Version-dependent session start
-     */
-    private function startSession()
-    {
-        if (version_compare(PHP_VERSION, '5.4', '>=')) {
-            if (PHP_SESSION_NONE === session_status()) {
-                session_start();
-            }
-        } elseif (!session_id()) {
-            session_start();
-        }
-
-        $this->sessionStarted = true;
+        $key   = $this->key($tokenId);
+        $token = session($key);
+        session()->forget($key);
+        return $token !== null ? (string) $token : null;
     }
 }

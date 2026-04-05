@@ -25,7 +25,8 @@ Homestead.yaml
 Thumbs.db
 
 # Laravel generated files
-/bootstrap/cache/*.php
+/bootstrap/cache/packages.php
+/bootstrap/cache/services.php
 /storage/framework/cache/data/*
 /storage/framework/sessions/*
 /storage/framework/testing/*

@@ -35,7 +35,7 @@ docker volume rm "$(docker compose config --format json 2>/dev/null | \
     docker volume rm hackazon_new_db_data 2>/dev/null || true
 
 echo "[reset] Recreating database from SQL dumps..."
-docker compose up -d db
+docker compose up -d --build db
 
 echo "[reset] Waiting for MySQL to initialise..."
 until docker compose exec -T db mysqladmin ping -u hackazon -phackazon --silent 2>/dev/null; do
@@ -44,9 +44,15 @@ until docker compose exec -T db mysqladmin ping -u hackazon -phackazon --silent 
 done
 echo ""
 
-echo "[reset] Clearing Laravel cache..."
-docker compose exec app php artisan cache:clear
-docker compose exec app php artisan config:clear
+echo "[reset] Restarting app container to drop stale DB connections..."
+docker compose restart app
+
+echo "[reset] Waiting for app to be ready..."
+until /usr/bin/curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/up 2>/dev/null | grep -q "200"; do
+    printf '.'
+    sleep 2
+done
+echo ""
 
 echo ""
 echo "[reset] Done. Database restored to clean state."

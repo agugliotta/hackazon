@@ -13,7 +13,16 @@ class Md5UserProvider extends EloquentUserProvider
 {
     public function validateCredentials(Authenticatable $user, array $credentials): bool
     {
-        $plain = $credentials['password'];
-        return md5($plain) === $user->getAuthPassword();
+        $plain    = $credentials['password'];
+        $stored   = $user->getAuthPassword();
+
+        // Legacy PHPixie format: "md5hash:salt"  →  md5($plain . $salt) == $md5hash
+        if (str_contains($stored, ':')) {
+            [$hash, $salt] = explode(':', $stored, 2);
+            return md5($plain . $salt) === $hash;
+        }
+
+        // New registrations store plain md5($password)
+        return md5($plain) === $stored;
     }
 }

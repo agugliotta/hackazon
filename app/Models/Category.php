@@ -33,7 +33,8 @@ class Category extends BaseModel
 
     public function getCategoriesSidebar(): array
     {
-        $roots = static::whereNull('parent')->orWhere('parent', 0)->where('hidden', 0)->get();
+        $roots = static::where(function($q) { $q->whereNull('parent')->orWhere('parent', 0); })
+            ->where('hidden', 0)->where('name', '!=', '0_ROOT')->get();
         $result = [];
         foreach ($roots as $root) {
             $root->childs = static::where('parent', $root->categoryID)->where('hidden', 0)->get()->all();

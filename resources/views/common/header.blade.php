@@ -59,7 +59,7 @@
                         <ul class="dropdown-menu js-cart-top-list cart-top-list">
                             @php $items = $cartItems ?? []; @endphp
                             @foreach($items as $item)
-                            {!! '<li><a href="/product/view?id=' . $item->product_id . '"><span class="pull-left product-name"><small>' . $item->qty . 'x</small> ' . $item->name . '</span> &nbsp; <small class="pull-right label label-info">$ ' . $item->price * $item->qty . ',-</small></a></li>' !!}
+                            {!! '<li><a href="/product/view?id=' . $item['product_id'] . '"><span class="pull-left product-name"><small>' . $item['qty'] . 'x</small> ' . $item['name'] . '</span> &nbsp; <small class="pull-right label label-info">$ ' . ($item['price'] * $item['qty']) . ',-</small></a></li>' !!}
                             @endforeach
                             <li class="divider"></li>
                             <li><a href="/cart/view">Show all items in shopping cart <i class="glyphicon glyphicon-chevron-right"></i></a></li>

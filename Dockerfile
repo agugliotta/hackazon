@@ -47,14 +47,22 @@ WORKDIR /var/www/html
 # Copy composer files first for layer caching
 COPY composer.json composer.lock* ./
 
-# Install PHP dependencies (no dev, no scripts yet)
-RUN composer install --no-dev --no-scripts --no-interaction --prefer-dist
+# Download packages without generating autoload (app dirs not present yet)
+RUN composer install --no-dev --no-scripts --no-interaction --prefer-dist --no-autoloader
 
-# Copy application source
+# Copy the two custom non-Packagist vendor libraries (AMF + GWT)
+# These are vendored in the repo because they're not on Packagist.
+# vendor/ is excluded from .dockerignore so we COPY them explicitly here.
+COPY vendor/hackazon vendor/hackazon
+COPY vendor/gwtphp   vendor/gwtphp
+
+# Copy application source (vendor/ is excluded via .dockerignore)
 COPY . .
 
-# Run post-install scripts now that full app is present
-RUN composer run-script post-autoload-dump 2>/dev/null || true
+# Generate optimized autoload now that all classmap directories exist
+# --no-scripts skips artisan package:discover (needs .env / DB, not available at build time)
+RUN composer dump-autoload --no-dev --optimize --no-scripts && \
+    rm -f bootstrap/cache/packages.php bootstrap/cache/services.php
 
 # Set permissions for Laravel storage and cache
 RUN chown -R www-data:www-data /var/www/html/storage \
@@ -62,4 +70,8 @@ RUN chown -R www-data:www-data /var/www/html/storage \
     chmod -R 775 /var/www/html/storage \
     /var/www/html/bootstrap/cache
 
+COPY docker/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
 EXPOSE 80
+ENTRYPOINT ["/entrypoint.sh"]

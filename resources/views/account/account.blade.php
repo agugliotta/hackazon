@@ -57,17 +57,17 @@
 <script type="text/javascript" charset="utf-8" src="/js/account.js"></script>
 
 <script type="text/x-handlebars" charset="utf-8" id="layout_header">
-    <h1 class="page-header">{{ "{{ title }}" }}</h1>
+    <h1 class="page-header">@{{ title }}</h1>
     <ol class="breadcrumb">
-        {{"{{"}}#each breadcrumbs {{"}}"}}
-            <li {{"{{"}}#if active {{"}}"}}class="active"{{"{{"}}/ if{{"}}"}}>
-                {{"{{"}}#if url{{"}}"}}
-                    <a href="{{ "{{ url }}" }}">{{ "{{ name }}" }}</a>
-                {{"{{"}}else{{"}}"}}
-                    {{ "{{ name }}" }}
-                {{"{{"}}/ if{{"}}"}}
+        @{{#each breadcrumbs }}
+            <li @{{#if active }}class="active"@{{/ if}}>
+                @{{#if url}}
+                    <a href="@{{ url }}">@{{ name }}</a>
+                @{{else}}
+                    @{{ name }}
+                @{{/ if}}
             </li>
-        {{"{{"}}/ each{{"}}"}}
+        @{{/ each}}
     </ol>
 </script>
 
@@ -85,7 +85,7 @@
             </p>
         </div>
         <div class="tab-pane profile-show js-profile" id="profile">
-            {{"{{"}}> tpl_user_profile{{"}}"}}
+            @{{> tpl_user_profile}}
         </div>
     </div>
 </script>
@@ -93,7 +93,7 @@
 <script type="text/x-handlebars" charset="utf-8" id="tpl_order_list">
     <div class="row">
         <div class="col-xs-12">
-            {{"{{"}}#if orders.length{{"}}"}}
+            @{{#if orders.length}}
             <table class="table table-striped">
                 <thead>
                     <tr>
@@ -105,21 +105,21 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {{"{{"}}#each orders{{"}}"}}
+                    @{{#each orders}}
                     <tr>
-                        <td><a href="/account#!orders/{{"{{"}} increment_id {{"}}"}}">{{"{{"}} increment_id {{"}}"}}</a></td>
-                        <td>{{"{{"}}formatDate created_at{{"}}"}}</td>
-                        <td>{{"{{"}} payment_method {{"}}"}}</td>
-                        <td>{{"{{"}} shipping_method {{"}}"}}</td>
-                        <td>{{"{{"}}order_status status{{"}}"}}</td>
+                        <td><a href="/account#!orders/@{{ increment_id }}">@{{ increment_id }}</a></td>
+                        <td>@{{formatDate created_at}}</td>
+                        <td>@{{ payment_method }}</td>
+                        <td>@{{ shipping_method }}</td>
+                        <td>@{{order_status status}}</td>
                     </tr>
-                    {{"{{"}}/ each{{"}}"}}
+                    @{{/ each}}
                 </tbody>
             </table>
-            {{"{{"}}/ if{{"}}"}}
-            {{"{{"}}#if paging{{"}}"}}
-                {{"{{"}}pager orders{{"}}"}}
-            {{"{{"}}/ if{{"}}"}}
+            @{{/ if}}
+            @{{#if paging}}
+                @{{pager orders}}
+            @{{/ if}}
         </div>
     </div>
 </script>
@@ -130,22 +130,22 @@
             <table class="table profile-table table-striped">
                 <thead><tr><td></td></tr></thead>
                 <tbody>
-                <tr><td>Username:</td><td>{{"{{"}} user.username {{"}}"}}</td></tr>
-                <tr><td>E-mail:</td><td>{{"{{"}} user.email {{"}}"}}</td></tr>
-                <tr><td>First Name:</td><td>{{"{{"}} user.first_name {{"}}"}}</td></tr>
-                <tr><td>Last Name:</td><td>{{"{{"}} user.last_name {{"}}"}}</td></tr>
-                <tr><td>Phone:</td><td>{{"{{"}} user.user_phone {{"}}"}}</td></tr>
+                <tr><td>Username:</td><td>@{{ user.username }}</td></tr>
+                <tr><td>E-mail:</td><td>@{{ user.email }}</td></tr>
+                <tr><td>First Name:</td><td>@{{ user.first_name }}</td></tr>
+                <tr><td>Last Name:</td><td>@{{ user.last_name }}</td></tr>
+                <tr><td>Phone:</td><td>@{{ user.user_phone }}</td></tr>
                 </tbody>
             </table>
         </div>
         <div class="col-xs-4">
-            {{"{{"}}#if user.photoUrl{{"}}"}}
-                <img src="{{"{{"}} baseImgPath {{"}}"}}{{"{{"}} user.photoUrl{{"}}"}}" alt="" class="profile-picture img-responsive img-bordered img-thumbnail" />
-            {{"{{"}}else{{"}}"}}
-                {{"{{"}}#if user.photo{{"}}"}}
-                    <img src="{{"{{"}} baseImgPath {{"}}"}}{{"{{"}} user.photo{{"}}"}}" alt="" class="profile-picture img-responsive img-bordered img-thumbnail" />
-                {{"{{"}}/ if{{"}}"}}
-            {{"{{"}}/ if{{"}}"}}
+            @{{#if user.photoUrl}}
+                <img src="@{{ baseImgPath }}@{{ user.photoUrl}}" alt="" class="profile-picture img-responsive img-bordered img-thumbnail" />
+            @{{else}}
+                @{{#if user.photo}}
+                    <img src="@{{ baseImgPath }}@{{ user.photo}}" alt="" class="profile-picture img-responsive img-bordered img-thumbnail" />
+                @{{/ if}}
+            @{{/ if}}
         </div>
     </div>
     <div class="row">

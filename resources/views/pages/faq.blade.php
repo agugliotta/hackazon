@@ -56,18 +56,15 @@
 
 <script>
     $(function() {
-        $('#faqForm').bootstrapValidator({
-            feedbackIcons: { valid: 'glyphicon glyphicon-ok', invalid: 'glyphicon glyphicon-remove', validating: 'glyphicon glyphicon-refresh' },
-            container: 'tooltip'
-        }).on('success.form.bv', function(e) {
+        $('#faqForm').on('submit', function(e) {
+            e.preventDefault();
             var l = Ladda.create(document.querySelector('#form-submit'));
             l.start();
             $.ajax({
-                url: '/faq', type: "POST", dataType: "json", data: $("#faqForm").serialize(),
+                url: '/faq', type: "POST", dataType: "json", data: $(this).serialize(),
                 success: function(data){ location.reload(); },
-                fail: function(){ $(".alert").empty().append('There is some error happened during processing your request.').show(); }
+                error: function(){ $(".alert").empty().append('There is some error happened during processing your request.').show(); }
             }).always(function() { l.stop(); });
-            return false;
         });
     });
 </script>

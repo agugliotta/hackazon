@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\User as UserModel;
+use App\Services\CartService;
 use Illuminate\Support\Facades\Auth;
 
 /**
@@ -35,6 +36,7 @@ class PageController extends BaseController
 
         $this->viewData['controller'] = $this;
         $this->viewData['currentUser'] = Auth::user();
+        $this->viewData['cartItems']   = app(CartService::class)->getItems();
 
         return null;
     }

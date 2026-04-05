@@ -83,9 +83,9 @@
                 dataFields = dataFields.add(cardBlock.find('input, select, textarea'));
             }
             $.ajax({
-                url:'/cart/setMethods', type:"POST", data: dataFields.serialize(), timeout: 10000,
+                url:'/cart/set-methods', type:"POST", data: dataFields.serialize(), timeout: 10000,
                 success: function(data) { window.location.href = "/checkout/shipping"; },
-                fail: function() { alert("error"); l.ladda('stop'); el.removeAttr('disabled'); }
+                error: function() { alert("error"); l.ladda('stop'); el.removeAttr('disabled'); }
             });
         });
         $('#useCouponLink').on('click', function (ev) {
@@ -139,38 +139,38 @@
                     <tbody>
                     @foreach($items as $item)
                         @php
-                        $product = $item->getProduct();
-                        $itemProduct = $item->getItemProduct();
+                        $pid     = $item['product_id'];
+                        $pModel  = \App\Models\Product::find($pid);
                         @endphp
-                        <tr class="tr_items" id="tr_item_{{ $itemProduct->id() }}">
+                        <tr class="tr_items" id="tr_item_{{ $pid }}">
                             <td class="hidden-xs text-center">
                                 <div class="img-thumbnail-wrapper">
-                                    <img class="img-responsive img-home-portfolio" src="/products_pictures/{{ $product['picture'] }}" alt="photo {{ $product['name'] }}">
+                                    <img class="img-responsive img-home-portfolio" src="/products_pictures/{{ $pModel->picture ?? '' }}" alt="photo {{ $item['name'] }}">
                                 </div>
                             </td>
                             <td>
-                                <h4><a href="/product/view?id={{ $product['productID'] }}">{{ $product['name'] }}</a></h4>
+                                <h4><a href="/product/view?id={{ $pid }}">{{ $item['name'] }}</a></h4>
                             </td>
                             <td>
                                 <div class="input-group hw-count-control">
                                     <span class="input-group-btn">
-                                        <button data-id="{{ $itemProduct->id() }}" class="btn btn-default minus_btn" type="button">
+                                        <button data-id="{{ $pid }}" class="btn btn-default minus_btn" type="button">
                                             <span class="glyphicon glyphicon-minus"></span>
                                         </button>
                                     </span>
-                                    <input type="text" id="input_{{ $itemProduct->id() }}" onchange="update_qty({{ $itemProduct->id() }}, this.value)" class="form-control" value="{{ $item->qty }}">
+                                    <input type="text" id="input_{{ $pid }}" onchange="update_qty({{ $pid }}, this.value)" class="form-control" value="{{ $item['qty'] }}">
                                     <span class="input-group-btn">
-                                        <button data-id="{{ $itemProduct->id() }}" class="btn btn-default plus_btn" type="button">
+                                        <button data-id="{{ $pid }}" class="btn btn-default plus_btn" type="button">
                                             <span class="glyphicon glyphicon-plus"></span>
                                         </button>
                                     </span>
                                 </div>
                             </td>
                             <td class="text-left">
-                                <span class="hw-total">$ <span id="row_span_item_{{ $itemProduct->id() }}">{{ $item->price }}</span>,- </span>
+                                <span class="hw-total">$ <span id="row_span_item_{{ $pid }}">{{ $item['price'] }}</span>,- </span>
                             </td>
                             <td align="right">
-                                <span class="hw-total">$ <span id="row_span_total_{{ $itemProduct->id() }}">{{ $item->price * $item->qty }}</span>,- </span>
+                                <span class="hw-total">$ <span id="row_span_total_{{ $pid }}">{{ $item['price'] * $item['qty'] }}</span>,- </span>
                             </td>
                         </tr>
                     @endforeach

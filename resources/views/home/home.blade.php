@@ -30,7 +30,7 @@
 
                 <div class="row product-list-inline-small">
                     @foreach($special_offers as $specOffer)
-                        @php $product = $specOffer->product_offers; @endphp
+                        @php $product = $specOffer->product; @endphp
                         @if($product && $product->productID)
                             @include('home.product_item')
                         @endif
