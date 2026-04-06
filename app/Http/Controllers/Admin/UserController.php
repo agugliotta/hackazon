@@ -45,8 +45,15 @@ class UserController extends CRUDController
             $user = $userModel->loadUserModel($login);
 
             if ($user && $user->active) {
-                // Validate MD5 password (PHPixie auth behaviour preserved)
-                if ($user->password === md5($password)) {
+                // Validate MD5 password — supports both plain md5 and legacy hash:salt format
+                $stored = $user->password;
+                $valid  = str_contains($stored, ':')
+                    ? (function() use ($stored, $password) {
+                        [$hash, $salt] = explode(':', $stored, 2);
+                        return md5($password . $salt) === $hash;
+                      })()
+                    : $stored === md5($password);
+                if ($valid) {
                     Auth::login($user);
 
                     if ($user->roles()->where('name', 'admin')->exists()) {

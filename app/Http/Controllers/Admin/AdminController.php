@@ -40,19 +40,24 @@ class AdminController extends BaseController
             return redirect('/install');
         }
 
+        // Login and logout routes are exempt from the auth check
+        $uri = request()->getRequestUri();
+        if (str_contains($uri, '/admin/user/login') || str_contains($uri, '/admin/user/logout')) {
+            return null;
+        }
+
         /** @var User|null $user */
         $user = Auth::user();
         $this->user = $user;
 
-        // Auth check — only the login action is exempt (handled by the User controller)
         if (!$user) {
-            return redirect('/admin/user/login?return_url=' . rawurlencode(request()->getRequestUri()));
+            return redirect('/admin/user/login?return_url=' . rawurlencode($uri));
         }
 
         $hasAdmin = $user->roles()->where('name', 'admin')->exists();
         if (!$hasAdmin) {
             session()->flash('error', "You don't have permissions to access this resource.");
-            return redirect('/admin/user/login?return_url=' . rawurlencode(request()->getRequestUri()));
+            return redirect('/admin/user/login?return_url=' . rawurlencode($uri));
         }
 
         // Resolve vuln config directory (Laravel base_path equivalent)
