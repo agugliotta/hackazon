@@ -1,6 +1,10 @@
 # Hackazon — Laravel Migration
 
-Hackazon is an **intentionally vulnerable** e-commerce web application originally built by Rapid7 for offensive security training. This repository is a migration of the original PHP 5.4/PHPixie codebase to **PHP 8.2+ / Laravel 13**.
+> **Based on [Hackazon by Rapid7](https://github.com/rapid7/hackazon)** — all credit for the original application, vulnerability design, and training content goes to the Rapid7 team.
+
+Hackazon is an **intentionally vulnerable** e-commerce web application originally built by Rapid7 for offensive security training. This repository is a migration of the original PHP 5.4 / PHPixie codebase to **PHP 8.4 / Laravel 13**, carried out with the assistance of AI (Claude by Anthropic).
+
+> **Migration status:** This migration has not been fully tested. Basic flows (browsing, registration, login, cart, orders) have been verified manually, but many features — GWT helpdesk, AMF/Flash endpoints, REST API, checkout flow, admin panel — may still have bugs. Use at your own risk and report issues.
 
 > **WARNING:** This application contains deliberate security vulnerabilities including SQL Injection, XSS, CSRF, IDOR, Remote File Inclusion, XXE, and OS Command Injection. **Do not deploy on a public server or production environment.**
 
@@ -169,6 +173,13 @@ vendor/
 
 ---
 
-## Original Project
+## Credits & Original Project
 
-[Hackazon by Rapid7](https://github.com/rapid7/hackazon) — PHP 5.4 / PHPixie original source.
+**Original application:** [Hackazon by Rapid7](https://github.com/rapid7/hackazon)
+— PHP 5.4 / PHPixie, all vulnerability design and training content by the Rapid7 team.
+
+**This migration** was performed with the assistance of [Claude Code](https://claude.ai/code) (Anthropic).
+The migration preserves all intentional vulnerabilities exactly as designed in the original.
+
+> The migration has not been fully tested and is not guaranteed to be 100% operational.
+> Contributions and bug reports are welcome.
