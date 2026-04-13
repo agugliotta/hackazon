@@ -11,7 +11,6 @@ namespace App\Installation\Step;
 use App\Core\View;
 use App\Exception\NotFoundException;
 use App\Installation\Result;
-use App\Pixie;
 
 /**
  * Common installation step features.
@@ -115,7 +114,6 @@ class AbstractStep
     public function chainNextStep(AbstractStep $next)
     {
         $this->next = $next;
-        $next->setPixie($this->pixie);
         $next->setView($this->view);
         $next->setPrevStep($this);
 
@@ -277,16 +275,15 @@ class AbstractStep
         $this->view = $view;
     }
 
-    public function propagateSettings(Pixie $pixie, View $view, $init = true)
+    public function propagateSettings(?View $view = null, $init = true)
     {
-        $this->setPixie($pixie);
         $this->setView($view);
         if ($init) {
             $this->init();
         }
 
         if ($nextStep = $this->getNextStep()) {
-            $nextStep->propagateSettings($pixie, $view, $init);
+            $nextStep->propagateSettings($view, $init);
         }
     }
 

@@ -165,12 +165,16 @@ class UserController extends PageController
                     // Send registration email
                     $emailView = view('user.register_email', ['data' => $dataUser])->render();
                     $emailData = User::getEmailData($dataUser['email']);
-                    app('hackazon.email')->send(
-                        $emailData['to'],
-                        $emailData['from'],
-                        'You have successfully registered on hackazon.com',
-                        $emailView
-                    );
+                    try {
+                        app('hackazon.email')->send(
+                            $emailData['to'],
+                            $emailData['from'],
+                            'You have successfully registered on hackazon.com',
+                            $emailView
+                        );
+                    } catch (\Exception $e) {
+                        error_log('[UserController] Registration email failed for ' . $dataUser['email'] . ': ' . $e->getMessage());
+                    }
 
                     return redirect('/account');
                 }

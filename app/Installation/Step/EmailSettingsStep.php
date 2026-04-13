@@ -103,18 +103,17 @@ class EmailSettingsStep extends AbstractStep
 
     public function init()
     {
-        $this->pixie->config->load_inherited_group('email');
-        $config = $this->pixie->config->get_group('email');
+        $emailConfig = config('email.default') ?: [];
 
-        $this->hostname = $config['default']['hostname'];
-        $this->port = $config['default']['port'];
-        $this->username = $config['default']['username'];
-        $this->password = $config['default']['password'];
-        $this->encryption = $config['default']['encryption'];
-        $this->timeout = $config['default']['timeout'];
-        $this->type = $config['default']['type'];
-        $this->mail_parameters = $config['default']['mail_parameters'];
-        $this->sendmail_command = $config['default']['sendmail_command'];
+        $this->hostname         = $emailConfig['hostname'] ?? config('mail.mailers.smtp.host', '127.0.0.1');
+        $this->port             = $emailConfig['port'] ?? config('mail.mailers.smtp.port', 2525);
+        $this->username         = $emailConfig['username'] ?? config('mail.username', '');
+        $this->password         = $emailConfig['password'] ?? config('mail.password', '');
+        $this->encryption       = $emailConfig['encryption'] ?? '';
+        $this->timeout          = $emailConfig['timeout'] ?? 30;
+        $this->type             = $emailConfig['type'] ?? 'smtp';
+        $this->mail_parameters  = $emailConfig['mail_parameters'] ?? '';
+        $this->sendmail_command = $emailConfig['sendmail_command'] ?? '/usr/sbin/sendmail -bs';
 
         $this->defaultPassword = $this->password;
     }

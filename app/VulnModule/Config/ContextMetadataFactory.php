@@ -40,7 +40,7 @@ class ContextMetadataFactory
 
     public function addNamespace($ns, $technology = Context::TECH_GENERIC)
     {
-        if (!is_array($this->namespaces[$technology])) {
+        if (empty($this->namespaces[$technology]) || !is_array($this->namespaces[$technology])) {
             $this->namespaces[$technology] = [];
         }
 
@@ -60,7 +60,7 @@ class ContextMetadataFactory
 
         $metadata = null;
 
-        if (!is_array($this->namespaces[$technology])) {
+        if (empty($this->namespaces[$technology]) || !is_array($this->namespaces[$technology])) {
             $this->namespaces[$technology] = [];
         }
 

@@ -25,4 +25,13 @@ class Md5UserProvider extends EloquentUserProvider
         // New registrations store plain md5($password)
         return md5($plain) === $stored;
     }
+
+    /**
+     * Prevent Laravel from rehashing the MD5 password to bcrypt after login.
+     * The intentionally weak MD5 storage is a preserved vulnerability.
+     */
+    public function rehashPasswordIfRequired(Authenticatable $user, array $credentials, bool $force = false): void
+    {
+        // No-op: do not rehash — MD5 weak storage is intentional
+    }
 }

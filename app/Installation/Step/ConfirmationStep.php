@@ -10,8 +10,8 @@
 namespace App\Installation\Step;
 
 
-use App\Model\User;
-use PHPixie\DB;
+use App\Models\User;
+use Illuminate\Support\Facades\DB;
 
 class ConfirmationStep extends AbstractStep
 {
@@ -54,7 +54,7 @@ class ConfirmationStep extends AbstractStep
 
     protected function persistFields()
     {
-        return ['version'];
+        return ['configVersion', 'configsToAdd', 'canWrite', 'configDir', 'bakDir'];
     }
 
     /**
@@ -63,7 +63,7 @@ class ConfirmationStep extends AbstractStep
     protected function processRequest(array $data = [])
     {
         $this->collectPreviousSteps();
-        $this->configDir = $this->pixie->root_dir.'assets/config';
+        $this->configDir = base_path('assets/config');
         $this->bakDir = $this->configDir . '/bak/'.date('Y_m_d_H_i_s');
 
         try {
@@ -111,48 +111,35 @@ class ConfirmationStep extends AbstractStep
      */
     protected function installDB()
     {
-        $this->pixie->config->load_inherited_group('db');
-
-        /** @var DB\Mysql\Connection $db */
-        $db = $this->pixie->db->get();
-        /** @var \PDO $conn */
-        $conn = $db->conn;
+        $conn = DB::connection()->getPdo();
         $conn->setAttribute(\PDO::ATTR_TIMEOUT, 300);
 
-        $this->pixie->db->get()->execute("SET foreign_key_checks = 0;");
-        //$this->view->subview = '';
+        DB::statement("SET foreign_key_checks = 0;");
+
         // Remove Foreign Keys
-        $sql = "SELECT tc.TABLE_NAME `table`, tc.CONSTRAINT_NAME `fk` "
+        $sql = "SELECT tc.TABLE_NAME as `table`, tc.CONSTRAINT_NAME as `fk` "
             . "FROM information_schema.TABLE_CONSTRAINTS tc "
             . "WHERE tc.CONSTRAINT_SCHEMA=(SELECT DATABASE()) AND tc.CONSTRAINT_TYPE='FOREIGN KEY'";
 
-        $foreignKeys = $this->pixie->db->get()->execute($sql);
-
+        $foreignKeys = DB::select($sql);
         foreach ($foreignKeys as $fk) {
-            if ($fk != "") {
-                $conn->exec("ALTER TABLE `{$fk->table}` DROP FOREIGN KEY `{$fk->fk}`;");
-            }
+            $conn->exec("ALTER TABLE `{$fk->table}` DROP FOREIGN KEY `{$fk->fk}`;");
         }
 
-        //Remove tables
-        $tables = $this->pixie->db->get()->execute("SELECT GROUP_CONCAT(table_name) as tbl FROM information_schema.tables  WHERE table_schema = (SELECT DATABASE())");
-        $tblRemove = "";
-        foreach ($tables as $table) {
-            if ($table->tbl != "") {
-                $tblRemove = "DROP TABLE IF EXISTS " . $table->tbl;
-            }
+        // Remove tables
+        $tables = DB::select("SELECT GROUP_CONCAT(table_name) as tbl FROM information_schema.tables WHERE table_schema = (SELECT DATABASE())");
+        $tblList = $tables[0]->tbl ?? '';
+        if ($tblList) {
+            $conn->exec("DROP TABLE IF EXISTS " . $tblList);
         }
-
-        if ($tblRemove != "")
-            $this->pixie->db->get()->execute($tblRemove);
 
         // Install schema
-        $dbScript = $this->pixie->root_dir . "database/db.sql";
+        $dbScript = base_path("database/db.sql");
         $conn->exec(file_get_contents($dbScript));
 
         // Install migrations
-        foreach (scandir($this->pixie->root_dir . "database/migrations") as $file) {
-            $file = $this->pixie->root_dir . "database/migrations/" . $file;
+        foreach (scandir(base_path("database/migrations")) as $file) {
+            $file = base_path("database/migrations/") . $file;
             if (is_file($file)) {
                 $sqlContent = file_get_contents($file);
                 if (strpos($sqlContent, '# IGNORE') !== 0) {
@@ -162,14 +149,11 @@ class ConfirmationStep extends AbstractStep
         }
 
         // Install demo data
-        $demoScript = $this->pixie->root_dir . "database/demo_database.sql";
+        $demoScript = base_path("database/demo_database.sql");
         $conn->exec(file_get_contents($demoScript));
 
         // Post-install scripts
-        $pixie = $this->pixie;
-        $db = $pixie->db;
-        $dirIterator = new \DirectoryIterator($this->pixie->root_dir . "database/post_migration");
-        /** @var \SplFileInfo $fileInfo */
+        $dirIterator = new \DirectoryIterator(base_path("database/post_migration"));
         foreach ($dirIterator as $fileInfo) {
             if ($fileInfo->isFile() && $fileInfo->isReadable()) {
                 $ext = strtolower($fileInfo->getExtension());
@@ -177,27 +161,21 @@ class ConfirmationStep extends AbstractStep
 
                 if ($ext == 'sql') {
                     $sqlContent = file_get_contents($filePath);
-
-                    // Ignore files starting with '# IGNORE' comment
                     if (strpos($sqlContent, '# IGNORE') !== 0) {
                         $conn->exec($sqlContent);
                     }
-
                 } else if ($ext == 'php') {
-                    $runner = function () use ($filePath, $pixie, $db) {
+                    $runner = function () use ($filePath) {
                         include $filePath;
                     };
                     $runner();
                 }
             }
         }
-        $this->pixie->db->get()->execute("SET foreign_key_checks = 1;");
+        DB::statement("SET foreign_key_checks = 1;");
 
-        //$params = $this->pixie->config->get('parameters');
         $adminCredentials = $this->previousSteps['admin_credentials']->getViewData();
-        /** @var User $userModel */
-        $userModel = $this->pixie->orm->get('User');
-        $userModel->changeUserPassword('admin', $adminCredentials['password']);
+        User::changeUserPassword('admin', $adminCredentials['password']);
     }
 
     /**
@@ -222,46 +200,44 @@ class ConfirmationStep extends AbstractStep
 
         if (isset($this->previousSteps['admin_credentials'])) {
             $adminCredSettings = $this->previousSteps['admin_credentials']->getViewData();
-            $this->pixie->config->load_inherited_group('parameters');
-            $paramsConfig = $this->pixie->config->get_group('parameters');
+            $paramsConfig = config('parameters') ?: [];
             $paramsConfig['installer_password'] = $adminCredSettings['password'];
             $this->writeConfigFile($this->configDir . "/parameters.php", $paramsConfig);
-
         } else {
-            $this->createOverriddenConfig('parameters');
+            $paramsConfig = config('parameters') ?: [];
+            $this->writeConfigFile($this->configDir . "/parameters.php", $paramsConfig);
         }
 
-        $this->createOverriddenConfig('rest');
+        $restConfig = config('rest') ?: [];
+        $this->writeConfigFile($this->configDir . "/rest.php", $restConfig);
 
         // Update DB settings
-        $dbConfig = $this->pixie->config->get('db');
-        /** @var AbstractStep $dbSettings */
-        $dbSettings = $this->previousSteps['db_settings'];
-        $dbSettings = $dbSettings->getViewData();
-        $dbConfig['default']['user'] = $dbSettings['user'];
-        $dbConfig['default']['password'] = $dbSettings['password'];
-        $dbConfig['default']['db'] = $dbSettings['db'];
-        $dbConfig['default']['host'] = $dbSettings['host'];
-        $dbConfig['default']['port'] = $dbSettings['port'];
-        $dbConfig['default']['driver'] = 'PDOV';
-        $dbConfig['default']['connection'] = 'mysql:host='.$dbSettings['host'].';port='.$dbSettings['port'].';dbname='.$dbSettings['db'];
+        $dbSettings = $this->previousSteps['db_settings']->getViewData();
+        $dbConfig = [
+            'default' => [
+                'driver' => 'mysql',
+                'host'   => $dbSettings['host'],
+                'port'   => $dbSettings['port'],
+                'db'     => $dbSettings['db'],
+                'user'   => $dbSettings['user'],
+                'password' => $dbSettings['password'],
+            ]
+        ];
         $this->writeConfigFile($configDir.'/db.php', $dbConfig);
 
         // Update email settings
-        $dbConfig = $this->pixie->config->get('email');
-        /** @var AbstractStep $dbSettings */
-        $dbSettings = $this->previousSteps['email_settings'];
-        $dbSettings = $dbSettings->getViewData();
-        $dbConfig['default']['type'] = $dbSettings['type'];
-        $dbConfig['default']['sendmail_command'] = $dbSettings['sendmail_command'];
-        $dbConfig['default']['mail_parameters'] = $dbSettings['mail_parameters'];
-        $dbConfig['default']['hostname'] = $dbSettings['hostname'];
-        $dbConfig['default']['port'] = $dbSettings['port'];
-        $dbConfig['default']['username'] = $dbSettings['username'];
-        $dbConfig['default']['password'] = $dbSettings['password'];
-        $dbConfig['default']['encryption'] = $dbSettings['encryption'];
-        $dbConfig['default']['timeout'] = $dbSettings['timeout'];
-        $this->writeConfigFile($configDir.'/email.php', $dbConfig);
+        $emailSettings = $this->previousSteps['email_settings']->getViewData();
+        $emailConfig = config('email') ?: [];
+        $emailConfig['default']['hostname']         = $emailSettings['hostname'];
+        $emailConfig['default']['port']             = $emailSettings['port'];
+        $emailConfig['default']['username']         = $emailSettings['username'];
+        $emailConfig['default']['password']         = $emailSettings['password'];
+        $emailConfig['default']['encryption']       = $emailSettings['encryption'];
+        $emailConfig['default']['type']             = $emailSettings['type'];
+        $emailConfig['default']['sendmail_command'] = $emailSettings['sendmail_command'];
+        $emailConfig['default']['mail_parameters']  = $emailSettings['mail_parameters'];
+        $emailConfig['default']['timeout']          = $emailSettings['timeout'];
+        $this->writeConfigFile($configDir.'/email.php', $emailConfig);
 
         // Vuln configs
         $vulnSampleDir = $this->configDir . '/vuln.sample';
@@ -339,8 +315,7 @@ class ConfirmationStep extends AbstractStep
      */
     public function createOverriddenConfig($groupName)
     {
-        $this->pixie->config->load_inherited_group($groupName);
-        $configData = $this->pixie->config->get_group($groupName);
+        $configData = config($groupName) ?: [];
         $this->writeConfigFile($this->configDir . "/{$groupName}.php", $configData);
     }
 

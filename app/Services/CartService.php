@@ -2,9 +2,13 @@
 
 namespace App\Services;
 
+use App\Exception\RedirectException;
 use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\Coupon;
+use App\Models\CustomerAddress;
+use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\Product;
 
 /**
@@ -277,5 +281,103 @@ class CartService
     public function getBillingAddress()
     {
         return session('cart_service.billing_address');
+    }
+
+    public function setShippingAddress($address): void
+    {
+        $data = session('cart_service', []);
+        $data['shipping_address'] = $address;
+        $this->save($data);
+    }
+
+    public function setShippingAddressUid($uid): void
+    {
+        $data = session('cart_service', []);
+        $data['cart']['shipping_address_id'] = $uid;
+        $this->save($data);
+    }
+
+    public function setBillingAddress($address): void
+    {
+        $data = session('cart_service', []);
+        $data['billing_address'] = $address;
+        $this->save($data);
+    }
+
+    public function setBillingAddressUid($uid): void
+    {
+        $data = session('cart_service', []);
+        $data['cart']['billing_address_id'] = $uid;
+        $this->save($data);
+    }
+
+    public function getAddress($addressId): ?CustomerAddress
+    {
+        return CustomerAddress::find($addressId);
+    }
+
+    public function removeAddress($addressId): void
+    {
+        CustomerAddress::where('id', $addressId)
+            ->where('customer_id', auth()->id())
+            ->delete();
+    }
+
+    // ── Cart validation ────────────────────────────────────────────────────
+
+    public function checkCart(): void
+    {
+        if (empty($this->getItems())) {
+            throw new RedirectException('/cart/view');
+        }
+    }
+
+    // ── Discount ───────────────────────────────────────────────────────────
+
+    public function getDiscount(): float
+    {
+        $coupon = $this->getCoupon();
+        if (!$coupon) {
+            return 0.0;
+        }
+        $subtotal = 0.0;
+        foreach ($this->getItems() as $item) {
+            $subtotal += (float) ($item['price'] ?? 0) * (int) ($item['qty'] ?? 1);
+        }
+        return $subtotal * ($coupon->discount / 100);
+    }
+
+    // ── Place order ────────────────────────────────────────────────────────
+
+    public function placeOrder(): Order
+    {
+        $user    = auth()->user();
+        $items   = $this->getItems();
+        $coupon  = $this->getCoupon();
+
+        $order = Order::create([
+            'customer_id'        => $user ? $user->getKey() : null,
+            'customer_firstname' => $user ? ($user->first_name ?? '') : '',
+            'customer_lastname'  => $user ? ($user->last_name ?? '') : '',
+            'customer_email'     => $user ? $user->email : '',
+            'status'             => 'pending',
+            'payment_method'     => null,
+            'shipping_method'    => null,
+            'coupon_id'          => $coupon ? $coupon->getKey() : null,
+            'discount'           => $this->getDiscount(),
+        ]);
+
+        foreach ($items as $item) {
+            OrderItem::create([
+                'order_id'   => $order->getKey(),
+                'product_id' => $item['product_id'],
+                'name'       => $item['name'] ?? '',
+                'qty'        => $item['qty'],
+                'price'      => $item['price'],
+            ]);
+        }
+
+        $this->updateLastStep(Cart::STEP_ORDER);
+        return $order;
     }
 }

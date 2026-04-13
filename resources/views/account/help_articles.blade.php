@@ -15,7 +15,7 @@
             <h3>Help Articles List</h3>
             <div class="list-group">
                 @foreach($files as $file => $fileName)
-                <a class="list-group-item" href="/account/help_articles?page={!! $fileName !!}"><span class="glyphicon glyphicon-file"></span> {!! ucwords($file) !!}</a>
+                <a class="list-group-item" href="/account/help-articles?page={!! $fileName !!}"><span class="glyphicon glyphicon-file"></span> {!! ucwords($file) !!}</a>
                 @endforeach
             </div>
         </div>

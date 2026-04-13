@@ -222,7 +222,7 @@ class CheckoutController extends PageController
             return $redirect;
         }
 
-        $this->checkCart();
+        if ($r = $this->checkCart()) return $r;
 
         /** @var CartService $service */
         $service = app(CartService::class);
@@ -264,7 +264,7 @@ class CheckoutController extends PageController
             return $redirect;
         }
 
-        $this->checkCart();
+        if ($r = $this->checkCart()) return $r;
 
         /** @var CartService $service */
         $service = app(CartService::class);
@@ -329,7 +329,7 @@ class CheckoutController extends PageController
         return $service->getAddress($addressId);
     }
 
-    protected function checkCart(): void
+    protected function checkCart(): ?\Illuminate\Http\RedirectResponse
     {
         /** @var CartService $service */
         $service = app(CartService::class);
@@ -338,8 +338,10 @@ class CheckoutController extends PageController
             $service->checkCart();
         } catch (\App\Exception\RedirectException $e) {
             if ($e->getLocation()) {
-                abort(redirect($e->getLocation())->getStatusCode());
+                return redirect($e->getLocation());
             }
         }
+
+        return null;
     }
 }

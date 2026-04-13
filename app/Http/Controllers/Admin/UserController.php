@@ -144,7 +144,7 @@ class UserController extends CRUDController
      * Returns [id => 'username (full name)'] map for select fields.
      * IDOR intentional — no ownership filter.
      */
-    public static function getAvailableUsers(array $options = []): array
+    public static function getAvailableUsers($pixie = null, array $options = []): array
     {
         $results = ['' => '—'];
         foreach (User::orderBy('username', 'asc')->get() as $user) {

@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
 @php
-$isWishListOwner = isset($user) && $user->id() == $wishList->user_id;
+$isWishListOwner = isset($user) && $user->id == $wishList->user_id;
 @endphp
 
 @section('content')
@@ -18,7 +18,7 @@ $isWishListOwner = isset($user) && $user->id() == $wishList->user_id;
     </div>
     <div class="row wishlist"
         data-access="{{ $isWishListOwner ? 'owner' : 'guest' }}"
-        data-id="{{ $wishList->id() }}"
+        data-id="{{ $wishList->id }}"
         data-name="{{ htmlspecialchars($wishList->name) }}"
         data-type="{{ $wishList->type }}"
         data-token="{{ $controller->getToken('wishlist') }}">
@@ -32,7 +32,7 @@ $isWishListOwner = isset($user) && $user->id() == $wishList->user_id;
                 <div class="block-content js-block-content">
                     <ul class="list-group">
                         @foreach($user->wishlists()->get() as $list)
-                            <li class="list-group-item {{ $wishList->id() == $list->id ? 'list-group-item active' : '' }}">
+                            <li class="list-group-item {{ $wishList->id == $list->id ? 'list-group-item active' : '' }}">
                                 <span class="badge">{{ $list->items()->count() }}</span>
                                 <a href="/wishlist/view/{{ $list->id }}">{!! $list->name !!}</a>
                             </li>
@@ -53,8 +53,8 @@ $isWishListOwner = isset($user) && $user->id() == $wishList->user_id;
                         <div class="block-content js-block-content" style="{{ $wishList->user_id != $wishlistFollower->id ? 'display: none' : '' }}">
                             <ul class="list-group">
                                 @foreach($wishlistFollower->wishlists()->get() as $list)
-                                    @if(\App\Models\Wishlist::TYPE_PUBLIC != $list->type) @continue @endif
-                                    <li class="list-group-item {{ $wishList->id() == $list->id ? 'list-group-item active' : '' }}">
+                                    @if(\App\Models\WishList::TYPE_PUBLIC != $list->type) @continue @endif
+                                    <li class="list-group-item {{ $wishList->id == $list->id ? 'list-group-item active' : '' }}">
                                         <span class="badge">{{ $list->items()->count() }}</span>
                                         <a href="/wishlist/view/{{ $list->id }}">{!! $list->name !!}</a>
                                     </li>
@@ -91,13 +91,13 @@ $isWishListOwner = isset($user) && $user->id() == $wishList->user_id;
 
                 @if($productPages > 1)
                     <ul class="pagination pull-right clearfix">
-                        <li><a href="/wishlist/view/{{ $wishList->id() . ($page > 1 ? '?page='.max(1, $page - 1) : '') }}" class="{{ $page == 1 ? 'disabled' : '' }}">&laquo;</a></li>
+                        <li><a href="/wishlist/view/{{ $wishList->id . ($page > 1 ? '?page='.max(1, $page - 1) : '') }}" class="{{ $page == 1 ? 'disabled' : '' }}">&laquo;</a></li>
                         @for($iPage = 1; $iPage <= $productPages; $iPage++)
                             <li {{ $iPage == $page ? 'class="active"' : '' }}>
-                                <a href="/wishlist/view/{{ $wishList->id() . ($iPage == 1 ? '' : '?page='.$iPage) }}">{{ $iPage }}</a>
+                                <a href="/wishlist/view/{{ $wishList->id . ($iPage == 1 ? '' : '?page='.$iPage) }}">{{ $iPage }}</a>
                             </li>
                         @endfor
-                        <li><a href="/wishlist/view/{{ $wishList->id() . ($page < $productPages ? '?page='.min($productPages, $page + 1) : '') }}" class="{{ $page == $productPages ? 'disabled' : '' }}">&raquo;</a></li>
+                        <li><a href="/wishlist/view/{{ $wishList->id . ($page < $productPages ? '?page='.min($productPages, $page + 1) : '') }}" class="{{ $page == $productPages ? 'disabled' : '' }}">&raquo;</a></li>
                     </ul>
                 @endif
             </div>

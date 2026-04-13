@@ -13,11 +13,6 @@ class HomeController extends AdminController
 {
     public function index(Request $request)
     {
-        $redirect = $this->before();
-        if ($redirect !== null) {
-            return $redirect;
-        }
-
         $reader = new PHPFileReader($this->vulnConfigDir);
         $matrixRenderer = new VulnerabilityMatrixRenderer($reader);
         $matrix = $matrixRenderer->render();

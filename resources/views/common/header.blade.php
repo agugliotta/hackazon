@@ -40,7 +40,7 @@
                             <li><a href="/account{!! isset($useRest) && $useRest ? '#!orders' : '/orders' !!}">My orders</a></li>
                             <li><a href="/account{!! isset($useRest) && $useRest ? '#!profile' : '#profile' !!}">My profile</a></li>
                             <li><a href="/account/documents">My documents</a></li>
-                            <li><a href="/account/help_articles">Help Articles</a></li>
+                            <li><a href="/account/help-articles">Help Articles</a></li>
                             <li><a href="/helpdesk">Helpdesk</a></li>
                         </ul>
                     </li>

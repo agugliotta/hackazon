@@ -774,14 +774,14 @@ class Context extends VulnerabilityHost
         }
 
         if ($this->technology == self::TECH_REST) {
-            if (!$params['controller']) {
+            if (empty($params['controller'])) {
                 $params['controller'] = false;
             }
         }
 
         if ($routeName && in_array($this->technology, [self::TECH_GENERIC, self::TECH_WEB, self::TECH_REST])) {
             $url = $this->pixie->router->generateUrl($routeName, $params, false, 'http', false);
-            if ($this->technology == self::TECH_REST && $params['action']) {
+            if ($this->technology == self::TECH_REST && !empty($params['action'])) {
                 $url .= ' [ ' . strtoupper($params['action']) . ' ]';
             }
             return $url;

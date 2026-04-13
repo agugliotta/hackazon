@@ -38,11 +38,11 @@ class ModelInfoRepository
             throw new \InvalidArgumentException('Model name must not be empty.');
         }
 
-        if ($this->models[$modelName] === false) {
+        if (($this->models[$modelName] ?? null) === false) {
             return false;
         }
 
-        if (!is_array($this->models[$modelName])) {
+        if (!isset($this->models[$modelName]) || !is_array($this->models[$modelName])) {
             if (preg_match('/^tbl_/i', $modelName)) {
                 $modelInfo = [
                     'table' => $modelName

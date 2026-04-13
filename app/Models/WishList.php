@@ -129,12 +129,12 @@ class WishList extends BaseModel
         $searchString = '%' . $raw . '%';
 
         // Build query — when SQLi vuln is active on $searchQuery, concatenation is intentional
-        $userIds = DB::select(DB::raw(
+        $userIds = DB::select(
             "SELECT DISTINCT u.id FROM tbl_users u"
             . " JOIN tbl_wish_list wl ON wl.user_id = u.id"
             . " WHERE wl.type = 'public'"
             . " AND (u.email LIKE '" . $searchString . "' OR u.username LIKE '" . $searchString . "')"
-        ));
+        );
         $ids = array_column($userIds, 'id');
 
         if (!$ids) return [];

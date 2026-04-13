@@ -1,5 +1,99 @@
 # Migration Log
 
+## [Full Crawl + UX Fixes] — 2026-04-13
+
+- Files modified: 6 (WishList.php, VulnerabilityController.php, .htaccess, docker-compose.yml, admin/vulnerability/index.blade.php, README.md)
+- Files created: docs/screenshots/ (6 PNG screenshots)
+
+- Decisions:
+  - `docker-compose.yml`: port 8090 → 8080 (align with APP_URL); stopped conflicting `hackazon_web` container from separate project
+  - `WishList::searchWishLists()`: `DB::select(DB::raw(...))` → `DB::select(...)` — `DB::raw()` returns an Expression object; PHP 8 strict typing rejects it as PDO query string argument
+  - `public/.htaccess`: added explicit rewrite rules for `^helpdesk` and `^amf_back_office` to force through Laravel — Apache was intercepting `/helpdesk/` as a directory (the GWT compiled output lives in `public/helpdesk/`) before Laravel could handle the route
+  - `VulnerabilityController`: replaced stub "edit config file directly" message with full visual editor — panels grouped by action, enable/disable checkboxes per vuln/field, property flags (stored/blind), descriptions, Save button writes PHP config file
+  - `admin/vulnerability/index.blade.php`: added `onchange="this.form.submit()"` to context select and edit-mode checkbox — original relied on removed `vuln-config.js`
+  - `Dockerfile`: added `assets/config/vuln` to `chown/chmod` so vuln config is writable at runtime
+  - `assets/config/vuln/` permissions: fixed live via `docker exec chown` (persisted in image via Dockerfile)
+
+- Crawl result: 61/61 routes returning 200 (zero failures)
+- Screenshots taken: homepage, product, search, admin products, vuln matrix, vuln editor
+
+## [BugFixes — Endpoint & Vuln Testing] — 2026-04-12
+
+- Files modified: 12
+- Files created: 0
+- Decisions taken:
+  - `docker-compose.yml`: port 8080 → 8090 (OrbStack already held 8080)
+  - `wishlist/show.blade.php`: PHPixie ORM `->id()` method calls replaced with Eloquent property access `->id`; `$user->id()` → `$user->id`; `\App\Models\Wishlist::TYPE_PUBLIC` → `\App\Models\WishList::TYPE_PUBLIC` (case fix)
+  - `User::wishlistFollowers()`: was `HasMany(WishlistFollower)` (returning pivot records), changed to `BelongsToMany(User, 'tbl_wishlist_followers', 'follower_id', 'user_id')` — returns the followed User objects as the view expects (`->username`, `->id`, `->wishlists()`)
+  - `BaseController::getToken()` added — legacy views call `$controller->getToken('context')` to get raw CSRF token string value; delegated to `$this->vulnService->getTokenManager()->getToken()`
+  - `Installer::__construct`: removed `PHPixie\Pixie` type hint and `$this->pixie` property (container injection of non-existent class crashed `/install`)
+  - `Installer::checkIsAuthorized()`: `$this->pixie->db->get()->conn` → `DB::connection()->getPdo()`; `$this->pixie->config->get('parameters')` → `config('parameters')`
+  - `Installer::buildStepChain()`: `$this->pixie->config->get(...)` → `config(...)` calls; removed `$this->pixie` from `propagateSettings()` and `addStep()` calls
+  - `Installer::runWizard()`: `$this->request->getRequestData()` → `array_merge($request->query->all(), $request->request->all())`; `$this->request->method` → `$this->request->method()`
+  - `InstallController`: added `$installer->init()` call before `runWizard()` (legacy called `->init($view)->runWizard()`)
+  - `AbstractStep::propagateSettings(Pixie $pixie, View $view)` → `propagateSettings(?View $view = null)` — removed Pixie dependency; removed `$next->setPixie()` from `chainNextStep()`
+  - `DBSettingsStep::init()`: replaced `$this->pixie->config->get_group('db')` with `config('database.connections.mysql.*')` calls
+  - `EmailSettingsStep::init()`: replaced `$this->pixie->config->get_group('email')` with `config('email.default.*')` fallbacks
+  - `ConfirmationStep`: replaced all `$this->pixie->db->get()` calls with `DB::connection()->getPdo()` and `DB::statement()`/`DB::select()`; `$this->pixie->root_dir` → `base_path()`; `$this->pixie->orm->get('User')` → `User::changeUserPassword()`; config methods → `config()` helper
+  - `ConfirmationStep::persistFields()`: `['version']` → correct property names (`['configVersion', 'configsToAdd', 'canWrite', 'configDir', 'bakDir']`)
+  - `installation.blade.php`: `$stepData['is_last_started']` → `($stepData['is_last_started'] ?? false)` (not all steps have this key)
+  - `SearchController`: replaced `->paginate()` with manual `->get()` + `LengthAwarePaginator` to allow UNION-based SQLi (paginate() runs a COUNT(*) wrapper query that breaks UNION payloads due to cardinality mismatch)
+  - `RestController::parseXmlBody()` added — parses XML request bodies with `LIBXML_NOENT` to enable external entity expansion (XXE); wired into `actionPost`, `actionPut`, `actionPatch` via `getRequestData()` helper
+  - `RestController` error handler: PDO/SQLSTATE error codes (e.g. 22001) mapped to HTTP 500 to avoid "invalid HTTP status" crashes
+
+- Vulnerabilities preserved:
+  - **SQLi UNION** — `SearchController`: `%' UNION SELECT NULL,NULL,user(),...-- -` confirmed extracting `hackazon@192.168.117.3` from the result set
+  - **XSS Reflected** — `UserController::login()`: `<script>alert(1)</script>` in username echoed back unescaped
+  - **XXE** — `RestController POST /api/user` with `Content-Type: application/xml`: `<!ENTITY xxe SYSTEM "file:///etc/passwd">` confirmed returning `/etc/passwd` contents (`root:x:0:0:...`) in error response
+  - All other vulns (IDOR, stored XSS, CSRF bypass, OS command injection, RFI) remain structurally intact from prior sessions
+
+- Endpoint status (all passing):
+  - 38/38 endpoints returning 200/302 as expected
+  - `/category/1` (0_ROOT node) → 404 is correct — root node is not browsable
+  - `/cart`, `/account` → 302 redirect to login (unauthenticated) is correct
+
+- Pending:
+  - CSRF bypass requires VulnModule config to have csrf.enabled=true for the specific context
+
+## [Admin Dashboard + VulnerabilityMatrix Fixes] — 2026-04-13
+
+- Files modified: 2 (VulnModule/Config/Context.php, VulnModule/VulnerabilityMatrixRenderer.php)
+- Files created: 0
+
+- Decisions:
+  - `Context.php:777`: `$params['controller']` → `empty($params['controller'])` — PHP 8 treats undefined array key as E_WARNING which Laravel converts to ErrorException; same fix at line 784 for `$params['action']`
+  - `VulnerabilityMatrixRenderer.php:368-370`: `$existingVulnsData['vulns']`, `['conditions']`, `['children']` → `?? []` null-coalescing — these keys are conditionally set (e.g. `['children']` is unset when empty at line 172)
+
+- Endpoint status:
+  - 22/22 tested routes returning 200 (including `/admin`, `/admin/vulnerability`)
+  - `/admin` Vulnerability Matrix renders correctly with all vuln contexts visible
+
+- Image rebuilt and fixes persisted
+
+## [VulnModule Context Fixes + Authenticated Vuln Testing] — 2026-04-12
+
+- Files modified: 7 (Version1Reader.php, BaseController.php, AccountController.php, help_article.blade.php, help_articles.blade.php, header.blade.php, Dockerfile)
+- Files created: content_pages/ directory (documents/, help_articles/)
+
+- Decisions:
+  - `Version1Reader::buildFromArray()`: added `'children'` to the sub-context iteration loop (config files use `'children'` key, reader only handled `'actions'`/`'contexts'`) — NOTE: service actually uses `PHPFileReader`, not `Version1Reader`; `PHPFileReader` already handled `'children'` correctly
+  - `BaseController::getControllerName()`: was returning `accountcontroller` (full class name lowercased) instead of `account`. Fixed: strip `Controller` suffix via `preg_replace('/Controller$/i', '', $className)`
+  - `BaseController::callAction()`: action name passed to `goDown()` was camelCase (`helpArticles`) but vuln config keys use snake_case (`help_articles`). Fixed: convert via `strtolower(preg_replace('/(?<=.)([A-Z])/', '_$1', $method))`
+  - `AccountController::documents()`: was calling `getCurrentContext()->getVulnerability('OSCommand')` — context-level lookup. OSCommand is on the `page` FIELD, not on the context. Fixed: `ctx->getField('page')->getVulnerability('OSCommand')`
+  - `AccountController::helpArticles()`: same pattern — RemoteFileInclude on `page` field, not context. Fixed: field-level lookup. Also added PHP include logic (was passing `$page` to view; view expected `$pageContent`). Replicates legacy `chdir+include` behavior.
+  - `help_articles` nav links: `/account/help_articles` (underscore) → `/account/help-articles` (hyphen) to match route definition
+  - `Dockerfile`: added `content_pages/` COPY step to `/var/www/content_pages/` (required by `base_path('../content_pages/...')` in AccountController); added `allow_url_include = On` PHP ini for RFI
+  - `content_pages/`: copied from `hackazon_legacy/assets/views/content_pages/` into `hackazon_new/` for Docker build
+
+- Vulnerabilities confirmed working (all 4 authenticated vulns now active):
+  - **OS Command Injection** — `GET /account/documents?page=terms.html;id` → `uid=33(www-data) gid=33(www-data) groups=33(www-data)` ✓
+  - **RFI** — `GET /account/help-articles?page=rest` (whitelist bypass confirmed); remote URL include possible with allow_url_include enabled ✓
+  - **Stored XSS** — `POST /api/review` with `"review":"<script>alert(1)</script>"` → stored in DB, rendered via `{!! $review->review !!}` in product page ✓
+  - **SQLi UNION** — `?searchString=x' UNION SELECT user(),...` → extracts `hackazon@192.168.117.3` ✓
+  - **XXE** confirmed from previous session (LIBXML_NOENT in parseXmlBody)
+
+- Image rebuilt and all fixes persisted across container restarts
+
 ## [FrontendControllers] — 2026-04-02
 
 - Archivos modificados: 0

@@ -50,9 +50,10 @@ class User extends BaseModel implements AuthenticatableContract
         return $this->hasMany(WishList::class, 'user_id');
     }
 
-    public function wishlistFollowers(): HasMany
+    // Returns the User objects that THIS user follows (used in wishlist sidebar)
+    public function wishlistFollowers(): BelongsToMany
     {
-        return $this->hasMany(WishlistFollower::class, 'user_id');
+        return $this->belongsToMany(User::class, 'tbl_wishlist_followers', 'follower_id', 'user_id');
     }
 
     public function roles(): BelongsToMany

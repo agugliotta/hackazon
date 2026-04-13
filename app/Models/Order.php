@@ -10,7 +10,11 @@ class Order extends BaseModel
     protected $fillable = ['customer_firstname','customer_lastname','customer_email','status','comment','customer_id','payment_method','shipping_method','coupon_id','discount'];
 
     public function items(): HasMany { return $this->hasMany(OrderItem::class, 'order_id'); }
+    public function orderItems(): HasMany { return $this->items(); }
     public function addresses(): HasMany { return $this->hasMany(OrderAddress::class, 'order_id'); }
+
+    public static function getByIncrement(int $id): ?self { return static::find($id); }
+    public static function getOrderStatuses(): array { return ['new', 'pending', 'shipped', 'complete']; }
     public function customer(): BelongsTo { return $this->belongsTo(User::class, 'customer_id'); }
     public function coupon(): BelongsTo { return $this->belongsTo(Coupon::class, 'coupon_id'); }
 

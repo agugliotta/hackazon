@@ -25,7 +25,7 @@
                         <tr>
                             <td class="product-image">
                                 <div class="img-thumbnail-wrapper">
-                                    <a href="/product/view?id={{ $orderItem->product->id() }}"><img src="/products_pictures/{{ $orderItem->product->picture }}" alt=""/></a>
+                                    <a href="/product/view?id={{ $orderItem->product->productID }}"><img src="/products_pictures/{{ $orderItem->product->picture }}" alt=""/></a>
                                 </div>
                             </td>
                             <td><a href="/product/view?id={{ $orderItem->product_id }}">{{ $orderItem->name }}</a></td>
@@ -46,7 +46,7 @@
                     <td align="right" colspan="2">$0</td>
                 </tr>
                 <tr class="danger">
-                    <td align="right" colspan="4"><strong>${!! $order->orderItems->getItemsTotal() !!}</strong></td>
+                    <td align="right" colspan="4"><strong>${!! $order->orderItems->sum(fn($i) => $i->price * $i->quantity) !!}</strong></td>
                 </tr>
                 </tbody>
             </table>

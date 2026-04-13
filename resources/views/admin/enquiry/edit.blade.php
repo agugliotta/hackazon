@@ -24,7 +24,7 @@
                     </div>
                 </div>
                 <div aria-hidden="true" style="display: none;" class="gwt-HTML errors alert alert-danger js-add-enquiry-message-errors"></div>
-                <form action="/admin/enquiry/{{ $item->id() }}/add-message" method="POST" class="js-add-enquiry-message-form">
+                <form action="/admin/enquiry/{{ $item->getKey() }}/add-message" method="POST" class="js-add-enquiry-message-form">
                     <table class="add-message-form" cellpadding="0" cellspacing="0">
                         <tbody>
                         <tr>

@@ -98,14 +98,11 @@ class DBSettingsStep extends AbstractStep
 
     public function init()
     {
-        $this->pixie->config->load_inherited_group('db');
-        $config = $this->pixie->config->get_group('db');
-
-        $this->host = $config['default']['host'];
-        $this->port = $config['default']['port'];
-        $this->user = $config['default']['user'];
-        $this->password = $config['default']['password'];
-        $this->db = $config['default']['db'];
+        $this->host     = config('database.connections.mysql.host', '127.0.0.1');
+        $this->port     = config('database.connections.mysql.port', '3306');
+        $this->user     = config('database.connections.mysql.username', '');
+        $this->password = config('database.connections.mysql.password', '');
+        $this->db       = config('database.connections.mysql.database', '');
 
         $this->defaultPassword = $this->password;
     }

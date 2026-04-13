@@ -17,6 +17,7 @@ class InstallController extends PageController
             /** @var Installer $installer */
             $installer = app(Installer::class);
             $installer->setForceFreshInstall(!!$request->query('force', false));
+            $installer->init();
             $result = $installer->runWizard($request);
 
         } catch (\App\Exception\RedirectException $e) {

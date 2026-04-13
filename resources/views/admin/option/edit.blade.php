@@ -32,7 +32,7 @@
                 <div class="js-add-variant-errors alert alert-danger add-variant-errors"></div>
                 <form action="/admin/option-value/save" class="js-add-option-variant-form" method="post">
                     <input type="hidden" name="variantID" id="field_variant_id" />
-                    <input type="hidden" name="optionID" id="field_option_id" value="{{ $item->id() }}" />
+                    <input type="hidden" name="optionID" id="field_option_id" value="{{ $item->getKey() }}" />
                     <div class="form-group">
                         <label for="field_variant_name">Name</label><input type="text" class="form-control" required id="field_variant_name" name="name">
                     </div>
@@ -55,7 +55,7 @@
         var table = $('#variantList');
 
         table.dataTable({
-            ajax: '/admin/option-value?option_id={{ $item->id() }}',
+            ajax: '/admin/option-value?option_id={{ $item->getKey() }}',
             serverSide: true,
             searching: false,
             paging: true,

@@ -75,22 +75,33 @@ class Version1Reader implements IReader
             $fields = $config['fields'];
 
             // Iterate all fields and create a rule set
-            foreach ($fields as $fieldName => $fieldData ) {
-                $vulnerabilities = $this->buildVulnerabilitySetFromArray($fieldData);
+            foreach ($fields as $fieldName => $fieldData) {
+                // Support numerically-indexed fields with 'name'/'source'/'vulnerabilities' keys
+                if (is_numeric($fieldName) && isset($fieldData['name'])) {
+                    $fieldName = $fieldData['name'];
+                    $source = isset($fieldData['source']) ? $fieldData['source'] : FieldDescriptor::SOURCE_ANY;
+                    $vulnData = isset($fieldData['vulnerabilities']['vuln_list'])
+                        ? $fieldData['vulnerabilities']['vuln_list']
+                        : (isset($fieldData['vulnerabilities']) ? $fieldData['vulnerabilities'] : []);
+                } else {
+                    $source = FieldDescriptor::SOURCE_ANY;
+                    $vulnData = $fieldData;
+                }
+                $vulnerabilities = $this->buildVulnerabilitySetFromArray($vulnData);
                 $vulnElement = new VulnerableElement($vulnerabilities);
 
                 // Add rule to the rule set
-                $field = new Field($fieldName, $vulnElement, FieldDescriptor::SOURCE_ANY);
+                $field = new Field($fieldName, $vulnElement, $source);
                 $context->addField($field);
             }
         }
 
 
-        foreach (['actions', 'contexts'] as $subContextType) {
+        foreach (['actions', 'contexts', 'children'] as $subContextType) {
             if (is_array($config[$subContextType])) {
                 foreach ($config[$subContextType] as $contextName => $contextData) {
                     $child = $this->buildFromArray($contextData, $contextName);
-                    $type = $subContextType == 'actions' ? Context::TYPE_ACTION : Context::TYPE_STANDARD;
+                    $type = $subContextType === 'actions' ? Context::TYPE_ACTION : Context::TYPE_STANDARD;
                     $child->setType($type);
                     $context->addChild($child);
                 }

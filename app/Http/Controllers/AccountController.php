@@ -37,7 +37,7 @@ class AccountController extends PageController
 
         $this->useRest = config('parameters.rest_in_profile', false);
 
-        return null;
+        return parent::before();
     }
 
     /**
@@ -117,11 +117,10 @@ class AccountController extends PageController
             $basePath = realpath(base_path('../content_pages/documents'));
             $path     = $basePath . DIRECTORY_SEPARATOR . $page;
 
-            // OSCommand vuln: when enabled, path is NOT escaped (intentional)
-            // wrapValueByPath is used by VulnService; here we replicate the isVulnerableTo check
-            $isOsCommandVuln = $this->vulnService->getConfig()
-                ->getCurrentContext()
-                ->getVulnerability('OSCommand');
+            // OSCommand vuln: check field-level vulnerability on the 'page' query param
+            $ctx = $this->vulnService->getConfig()->getCurrentContext();
+            $pageField = $ctx->getField('page');
+            $isOsCommandVuln = $pageField ? $pageField->getVulnerability('OSCommand') : null;
 
             if (!$isOsCommandVuln || !$isOsCommandVuln->isEnabled()) {
                 $path = escapeshellarg($path);
@@ -180,10 +179,10 @@ class AccountController extends PageController
         if ($request->query('page')) {
             $page = $request->query('page');
 
-            // RFI: when RemoteFileInclude vuln is enabled, skip the whitelist check
-            $isRfiVuln = $this->vulnService->getConfig()
-                ->getCurrentContext()
-                ->getVulnerability('RemoteFileInclude');
+            // RFI: check field-level vulnerability on the 'page' query param
+            $ctx = $this->vulnService->getConfig()->getCurrentContext();
+            $pageField = $ctx->getField('page');
+            $isRfiVuln = $pageField ? $pageField->getVulnerability('RemoteFileInclude') : null;
 
             if (!$isRfiVuln || !$isRfiVuln->isEnabled()) {
                 $files = $this->getHelpArticlesFiles();
@@ -195,9 +194,26 @@ class AccountController extends PageController
             // XSS: pageTitle built from raw $page — no sanitization
             $pageTitle = ucwords(str_replace('_', ' ', $page));
 
+            // RFI: include the page file (local or remote when RFI enabled)
+            // Replicates PHPixie view behavior: chdir to help_articles, then include($page.'.php')
+            $basePath = base_path('../content_pages/help_articles');
+            $pageContent = '';
+            $prevCwd = getcwd();
+            chdir($basePath);
+            try {
+                // Strip null bytes like original (preg_split on \n\r\0)
+                $includePath = preg_split("/[\n\r\0]/", $page . '.php')[0];
+                ob_start();
+                include trim($includePath);
+                $pageContent = ob_get_clean();
+            } catch (\Exception $e) {
+                ob_end_clean();
+            }
+            chdir($prevCwd);
+
             return $this->view('account.help_article', [
-                'pageTitle' => $pageTitle,
-                'page'      => $page,
+                'pageTitle'   => $pageTitle,
+                'pageContent' => $pageContent,
             ]);
 
         } else {

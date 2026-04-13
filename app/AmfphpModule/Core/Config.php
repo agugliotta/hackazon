@@ -23,7 +23,7 @@ class Config extends \Amfphp_Core_Config implements IPixifiable
         parent::__construct();
         $this->pluginsConfig['AmfphpDiscovery']['restrictAccess'] = false;
         $this->serviceFolders = [
-            [dirname(__FILE__) . '/../Services/', '\\AmfphpModule\\Services']
+            [realpath(dirname(__FILE__) . '/../Services') . '/', '\\AmfphpModule\\Services']
         ];
         $this->pluginsFolders[] = dirname(__FILE__) . '/../Plugins/';
         $this->pluginsConfig['Pixifier']['pixie'] = $pixie;

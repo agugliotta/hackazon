@@ -41,7 +41,7 @@
             <div class="row step-meter">
                 <div class="row bs-wizard" style="border-bottom:0;">
                     @foreach($steps as $stepName => $stepData)
-                        <div class="col-xs-{{ count($steps) == 3 ? 4 : 3 }} bs-wizard-step {{ $stepData['started'] ? 'complete' : 'disabled' }}{{ $stepData['is_last_started'] ? ' active' : '' }}">
+                        <div class="col-xs-{{ count($steps) == 3 ? 4 : 3 }} bs-wizard-step {{ $stepData['started'] ? 'complete' : 'disabled' }}{{ ($stepData['is_last_started'] ?? false) ? ' active' : '' }}">
                             <div class="text-center bs-wizard-stepnum {{ $stepData['current'] ? 'active' : '' }}">
                                 {!! $stepData['title'] !!}
                             </div>

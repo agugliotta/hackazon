@@ -108,7 +108,7 @@ class PixieContainer implements \ArrayAccess
             $factory = new ContextMetadataFactory($this->pixie->annotationReader);
             $factory->addNamespace('App\\Http\\Controllers\\', Context::TECH_GENERIC);
             $factory->addNamespace('App\\Http\\Controllers\\', Context::TECH_WEB);
-            $factory->addNamespace('App\\AmfphpModule\\Services\\', Context::TECH_AMF);
+            $factory->addNamespace('AmfphpModule\\Services\\', Context::TECH_AMF);
             $factory->addNamespace('App\\Http\\Controllers\\Api\\', Context::TECH_REST);
             $factory->addNamespace('', Context::TECH_GWT);
             return $factory;
@@ -129,7 +129,12 @@ class PixieRouter
 {
     public function generateUrl(string $name, array $params = [], bool $absolute = false, string $protocol = 'http', bool $prepend = true): string
     {
-        return route($name, $params);
+        try {
+            return route($name, $params);
+        } catch (\Symfony\Component\Routing\Exception\RouteNotFoundException $e) {
+            // Named route doesn't exist (e.g. 'rest', 'gwt') — return a best-effort path
+            return '/' . ltrim($name, '/');
+        }
     }
 }
 

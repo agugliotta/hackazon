@@ -8,7 +8,7 @@
             <ol class="breadcrumb">
                 <li><a href="/">Home</a></li>
                 <li><a href="/account">Account</a></li>
-                <li><a href="/account/help_articles">Help Articles</a></li>
+                <li><a href="/account/help-articles">Help Articles</a></li>
                 <li class="active">{!! $pageTitle !!}</li>
             </ol>
         </div>

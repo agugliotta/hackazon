@@ -36,7 +36,7 @@
                 <div class="js-add-variant-errors alert alert-danger add-variant-errors"></div>
                 <form action="/admin/product-option-value/save" class="js-add-option-variant-form" method="post">
                     <input type="hidden" name="ID" id="field_id" />
-                    <input type="hidden" name="productID" id="field_product_id" value="{{ $item->id() }}" />
+                    <input type="hidden" name="productID" id="field_product_id" value="{{ $item->productID }}" />
                     <div class="form-group">
                         <label for="field_optionID">Option</label>
                         <select class="form-control" id="field_optionID" name="optionID">
@@ -69,7 +69,7 @@
         var table = $('#variantList');
 
         table.dataTable({
-            ajax: '/admin/product-option-value?product_id={{ $item->id() }}',
+            ajax: '/admin/product-option-value?product_id={{ $item->productID }}',
             serverSide: true,
             searching: false,
             paging: true,

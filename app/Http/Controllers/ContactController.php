@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ContactMessages;
+use App\Models\ContactMessage;
 use Illuminate\Http\Request;
 use VulnModule\Config\Annotations as Vuln;
 use VulnModule\Config\FieldDescriptor;
@@ -26,7 +26,7 @@ class ContactController extends PageController
             $post = json_decode($postData['data']);
 
             // Create contact message — no sanitization (preserves stored XSS vulnerability)
-            ContactMessages::create((array) $post);
+            ContactMessage::create((array) $post);
 
             if ($request->ajax()) {
                 return response('', 204);

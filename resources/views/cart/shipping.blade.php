@@ -121,7 +121,7 @@
                         <button data-id="{{ $address->getUid() }}" class="btn btn-primary btn-block confirm-address ladda-button" data-token="{!! $controller->renderTokenField('checkout_step2') !!}" data-style="expand-right" data-spinner-size="20"><span class="ladda-label">Ship to this address</span></button>
                     </div>
                 </div>
-                @if($address->id())
+                @if($address->getKey())
                     <div class="row">
                         <div class="col-xs-6">
                             <button data-id="{{ $address->getUid() }}" class="btn btn-success btn-block edit-address ladda-button small-button" data-size="xs" data-spinner-size="16" data-spinner-color="#666666" data-style="expand-right"><span class="ladda-label">Edit</span></button>

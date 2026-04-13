@@ -93,8 +93,10 @@ class RestController extends Controller
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return $this->errorResponse('Not Found', 404);
         } catch (\Exception $e) {
-            $code = method_exists($e, 'getStatusCode') ? $e->getStatusCode() : ($e->getCode() ?: 500);
-            return $this->errorResponse($e->getMessage(), (int)$code);
+            $rawCode = method_exists($e, 'getStatusCode') ? $e->getStatusCode() : ($e->getCode() ?: 500);
+            // Map non-HTTP codes (e.g. SQLSTATE codes) to 500
+            $code = ($rawCode >= 100 && $rawCode <= 599) ? (int)$rawCode : 500;
+            return $this->errorResponse($e->getMessage(), $code);
         }
     }
 
@@ -213,7 +215,7 @@ class RestController extends Controller
         if (!$this->modelInstance) {
             abort(404);
         }
-        $data = $request->all();
+        $data = $this->getRequestData($request);
         unset($data[$this->modelInstance->getKeyName()]);
 
         $this->modelInstance->fill(array_intersect_key($data, array_flip($this->modelInstance->getFillable())));
@@ -228,7 +230,7 @@ class RestController extends Controller
         if (!$this->item) {
             abort(404);
         }
-        $data = $request->all();
+        $data = $this->getRequestData($request);
         unset($data[$this->item->getKeyName()]);
         $this->item->fill(array_intersect_key($data, array_flip($this->item->getFillable())));
         $this->item->save();
@@ -240,7 +242,7 @@ class RestController extends Controller
         if (!$this->item) {
             abort(404);
         }
-        $data = $request->all();
+        $data = $this->getRequestData($request);
         $this->item->fill(array_intersect_key($data, array_flip($this->item->getFillable())));
         $this->item->save();
         return $this->item->toArray();
@@ -315,6 +317,38 @@ class RestController extends Controller
                 $xml->addChild((string)$key, htmlspecialchars((string)$value));
             }
         }
+    }
+
+    /**
+     * Parse XML request body — XXE intentionally unprotected (simplexml_load_string without entity loading disabled).
+     * When XMLExternalEntity vuln is enabled in VulnService, entity loader is NOT disabled → XXE works.
+     * Mirrors the legacy App\Core\Request::adjustRequestContentType() logic exactly.
+     */
+    protected function parseXmlBody(Request $request): array
+    {
+        $body = $request->getContent();
+        if (!$body) {
+            return [];
+        }
+
+        // Intentional XXE: LIBXML_NOENT forces external entity expansion — vulnerability preserved
+        $xml = simplexml_load_string($body, 'SimpleXMLElement', LIBXML_NOENT);
+
+        if ($xml === false) {
+            abort(400, 'Invalid XML Body.');
+        }
+
+        $data = json_decode(json_encode($xml), true);
+        return is_array($data) ? $data : [];
+    }
+
+    protected function getRequestData(Request $request): array
+    {
+        $contentType = $request->header('Content-Type', '');
+        if (str_contains($contentType, 'application/xml')) {
+            return $this->parseXmlBody($request);
+        }
+        return $request->all();
     }
 
     // ─── Content negotiation ─────────────────────────────────────────────────

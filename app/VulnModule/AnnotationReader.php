@@ -47,9 +47,13 @@ class AnnotationReader
         $result = null;
         $reflectClass = class_exists($className) ? new \ReflectionClass($className) : null;
 
+        if (!$reflectClass) {
+            return null;
+        }
         try {
             $result = $reader->getClassAnnotation($reflectClass, $annotationName);
         } catch (\Exception $e) {
+            error_log('[AnnotationReader] getClassAnnotation failed for ' . $className . ': ' . $e->getMessage());
             $result = null;
         }
 
@@ -66,6 +70,7 @@ class AnnotationReader
         try {
             return $reader->getClassAnnotations(new \ReflectionClass($className));
         } catch (\Exception $e) {
+            error_log('[AnnotationReader] getClassAnnotations failed for ' . $className . ': ' . $e->getMessage());
         }
         return [];
     }
@@ -77,9 +82,13 @@ class AnnotationReader
         $reflectMethod = class_exists($className) && method_exists($className, $methodName)
                 ? new \ReflectionMethod($className, $methodName) : null;
 
+        if (!$reflectMethod) {
+            return null;
+        }
         try {
             $result = $reader->getMethodAnnotation($reflectMethod, $annotationName);
         } catch (\Exception $e) {
+            error_log('[AnnotationReader] getMethodAnnotation failed for ' . $className . '::' . $methodName . ': ' . $e->getMessage());
             $result = null;
         }
 
@@ -101,6 +110,7 @@ class AnnotationReader
         try {
             return $reader->getMethodAnnotations(new \ReflectionMethod($className, $methodName));
         } catch (\Exception $e) {
+            error_log('[AnnotationReader] getMethodAnnotations failed for ' . $className . '::' . $methodName . ': ' . $e->getMessage());
         }
 
         return [];

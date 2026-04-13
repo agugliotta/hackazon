@@ -423,8 +423,10 @@ abstract class CRUDController extends AdminController
             }
         }
 
-        $orderDir    = $orderData['dir'] ?? 'asc';
-        $dbColumn    = str_replace('___', '.', $orderColumn);
+        $orderDir = in_array(strtolower($orderData['dir'] ?? ''), ['asc', 'desc']) ? $orderData['dir'] : 'asc';
+        $dbColumn = array_key_exists($orderColumn, $listFields)
+            ? str_replace('___', '.', $orderColumn)
+            : str_replace('___', '.', (string) array_key_first($listFields));
         $query->orderByRaw("`$dbColumn` $orderDir");
 
         // Filtering (global search)

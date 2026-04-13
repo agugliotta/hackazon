@@ -88,9 +88,15 @@ class SearchController extends PageController
         }
 
         $perPage = 12;
-        $products = $query->select('tbl_products.*')
-                          ->distinct()
-                          ->paginate($perPage, ['*'], 'page', $currentPage);
+        // Use manual offset+limit instead of paginate() to keep UNION-based SQLi functional.
+        // paginate() runs a COUNT(*) wrapper that breaks UNION payloads.
+        $allRows = $query->select('tbl_products.*')->distinct()->get();
+        $total   = count($allRows);
+        $items   = $allRows->slice($perPage * ($currentPage - 1), $perPage)->values();
+        $products = new \Illuminate\Pagination\LengthAwarePaginator(
+            $items, $total, $perPage, $currentPage,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
 
         // Build URL callback for pager links — XSS-escaped values in URLs (same as original escapeXSS())
         $pagerUrlBase = "/search/page/?id=" . htmlspecialchars($catId, ENT_QUOTES, 'UTF-8')

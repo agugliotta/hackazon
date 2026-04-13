@@ -51,8 +51,9 @@ class BaseController extends Controller
         $this->vulnService->getConfig()->getCurrentContext()->setRequest($this->request);
         $this->vulnService->setRequest($this->request);
 
-        // Set up action-level context
-        $this->vulnService->goDown($method);
+        // Set up action-level context — convert camelCase to snake_case to match vuln config keys
+        $actionName = strtolower(preg_replace('/(?<=.)([A-Z])/', '_$1', $method));
+        $this->vulnService->goDown($actionName);
         $this->vulnService->getConfig()->getCurrentContext()->setRequest($this->request);
 
         // Check referrer via VulnModule
@@ -99,7 +100,8 @@ class BaseController extends Controller
     protected function getControllerName(): string
     {
         $className = class_basename(static::class);
-        return strtolower($className);
+        // Strip "Controller" suffix to match vuln config filenames (e.g. AccountController → account)
+        return strtolower(preg_replace('/Controller$/i', '', $className));
     }
 
     // ─── CSRF helpers (VulnModule-aware) ──────────────────────────────────────
@@ -133,6 +135,12 @@ class BaseController extends Controller
     {
         $fullTokenId = self::TOKEN_PREFIX . $tokenId;
         $this->vulnService->getTokenManager()->removeToken($fullTokenId);
+    }
+
+    public function getToken(string $tokenId): string
+    {
+        $token = $this->vulnService->getTokenManager()->getToken(self::TOKEN_PREFIX . $tokenId);
+        return $token->getValue();
     }
 
     public function renderTokenField(string $tokenId): string
