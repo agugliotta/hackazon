@@ -1,9 +1,14 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/laravel",
+    "name": "agugliotta/hackazon",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
-    "keywords": ["laravel", "framework"],
+    "description": "Intentionally vulnerable e-commerce app for security training — PHP 8.4 / Laravel 13 migration of Rapid7 Hackazon. Includes SQLi, XSS, CSRF, IDOR, XXE, RFI, OS Command Injection.",
+    "keywords": [
+        "hackazon", "vulnerable-by-design", "security-training",
+        "penetration-testing", "ctf", "dvwa", "webgoat",
+        "sql-injection", "xss", "csrf", "idor", "xxe",
+        "laravel", "php", "docker", "offensive-security"
+    ],
     "license": "MIT",
     "require": {
         "php": "^8.4",

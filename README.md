@@ -1,8 +1,16 @@
 # Hackazon — Laravel Migration
 
+![PHP](https://img.shields.io/badge/PHP-8.4-777BB4?logo=php&logoColor=white)
+![Laravel](https://img.shields.io/badge/Laravel-13-FF2D20?logo=laravel&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-22c55e)
+![Vulnerable by design](https://img.shields.io/badge/Vulnerable-by%20design-dc2626)
+
 > **Based on [Hackazon by Rapid7](https://github.com/rapid7/hackazon)** — all credit for the original application, vulnerability design, and training content goes to the Rapid7 team.
 
-Hackazon is an **intentionally vulnerable** e-commerce web application originally built by Rapid7 for offensive security training. This repository is a complete migration of the original PHP 5.4 / PHPixie codebase to **PHP 8.4 / Laravel 13**, carried out with the assistance of AI (Claude by Anthropic).
+Hackazon is an **intentionally vulnerable** e-commerce web application built for **offensive security training, CTF challenges, and penetration testing labs**. Originally created by Rapid7, this repository is a complete migration of the PHP 5.4 / PHPixie codebase to **PHP 8.4 / Laravel 13** — making it a modern, Docker-ready alternative to DVWA and WebGoat for teaching real-world web vulnerabilities.
+
+Spin up a full security lab in under two minutes with Docker. Each vulnerability can be toggled on/off from the admin panel, making it ideal for structured courses and guided labs.
 
 > **WARNING:** This application contains deliberate security vulnerabilities including SQL Injection, XSS, CSRF, IDOR, Remote File Inclusion, XXE, and OS Command Injection. **Do not deploy on a public server or production environment.**
 
